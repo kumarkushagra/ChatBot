@@ -1,22 +1,26 @@
 from fastapi import FastAPI, Request
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import JSONResponse
-from chat import get_response
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
+import model
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
+# Mount the static directory to serve static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-@app.get("/")
-async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+class UserMessage(BaseModel):
+    message: str
+
+@app.get("/", response_class=HTMLResponse)
+async def get_index():
+    with open("templates/index.html") as f:
+        return HTMLResponse(content=f.read())
 
 @app.post("/chat")
-async def chat(request: Request):
-    data = await request.json()
-    user_message = data.get('message')
-    response = get_response(user_message)
-    return JSONResponse(content={"response": response})
+async def chat(request: UserMessage):
+    user_message = request.message
+    response = model.generate_response(user_message)
+    return {"response": response}
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, port=8000)
