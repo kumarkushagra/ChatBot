@@ -3,41 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
+    <title>ChatBot</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Chat with the Bot</h1>
-        <div id="chat-box" class="chat-box">
-        </div>
-        <div class="input-box">
-            <input type="text" id="user-input" placeholder="Type your message here...">
-            <input type="submit" id="send-btn" value="Send">
+    <div class="chat-container">
+        <header class="chat-header">
+            <h1>Chat with the Bot</h1>
+        </header>
+        <div class="chat-box" id="chatBox"></div>
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
         </div>
     </div>
 
     <script>
-        document.getElementById('send-btn').onclick = function() {
-            const userInput = document.getElementById('user-input').value;
-            const chatBox = document.getElementById('chat-box');
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput').value;
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML += `<div class="message user-message"><p>${userInput}</p></div>`;
 
-            fetch('/chat', {
+            const response = await fetch('/chat', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message: userInput })
-            })
-            .then(response => response.json())
-            .then(data => {
-                const botResponse = data.response;
-                chatBox.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
-                chatBox.innerHTML += `<p><strong>Bot:</strong> ${botResponse}</p>`;
-                document.getElementById('user-input').value = '';
-                chatBox.scrollTop = chatBox.scrollHeight;
+                body: JSON.stringify({ message: userInput }),
             });
-        };
+
+            const data = await response.json();
+            chatBox.innerHTML += `<div class="message bot-message"><p>${data.response}</p></div>`;
+            document.getElementById('userInput').value = '';
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to the bottom
+        }
     </script>
 </body>
 </html>
